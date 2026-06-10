@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Free Fire Lobby</title>
+    <title>Free Fire Lobby Animado</title>
     <style>
         * {
             box-sizing: border-box;
@@ -30,6 +30,7 @@
             margin: auto;
             top: 50%;
             transform: translateY(-50%);
+            overflow: hidden;
         }
 
         .lobby-bg {
@@ -37,9 +38,18 @@
             height: 100%;
             object-fit: contain;
             display: block;
+            transition: filter 0.3s ease;
         }
 
-        /* Modificación del contador de Diamantes */
+        /* CAPA DE ANIMACIÓN DE PARTÍCULAS (EFECTO LOBBY VIVO) */
+        .particles {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Contador de Diamantes Mejorado */
         .diamond-overlay {
             position: absolute;
             top: 2.1%; 
@@ -53,6 +63,12 @@
             padding-left: 2px;
             cursor: pointer;
             z-index: 10;
+            transition: transform 0.1s ease;
+        }
+
+        .diamond-overlay:active {
+            transform: scale(1.1); /* Efecto de hundirse al tocar */
+            box-shadow: 0 0 10px #00bfff;
         }
 
         .diamond-text {
@@ -63,7 +79,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* Zona Invisible sobre el Botón INICIAR */
+        /* Zona del Botón INICIAR */
         .btn-iniciar-overlay {
             position: absolute;
             bottom: 2%;
@@ -74,14 +90,15 @@
             z-index: 10;
         }
 
-        /* Animación cuando busca partida (parpadeo) */
+        /* Animación Pro de Emparejamiento (Filtro Rojo de Combate) */
         .searching-match {
-            animation: pulse 1s infinite;
+            animation: pulseMatch 1.2s infinite ease-in-out;
+            filter: sepia(0.4) saturate(1.8) hue-rotate(340deg);
         }
 
-        @keyframes pulse {
+        @keyframes pulseMatch {
             0% { opacity: 1; }
-            50% { opacity: 0.5; }
+            50% { opacity: 0.7; }
             100% { opacity: 1; }
         }
 
@@ -90,16 +107,18 @@
         }
     </style>
 </head>
-<body onclick="iniciarMusica()">
+<body>
 
-    <div class="lobby-container">
+    <div class="lobby-container" id="lobby-box">
         <img src="image.jpeg" alt="Lobby" class="lobby-bg" id="lobby-img">
         
-        <div class="diamond-overlay" onclick="sumarDiamantes(event)">
+        <canvas class="particles" id="particleCanvas"></canvas>
+        
+        <div class="diamond-overlay" onclick="sumarDiamantes()">
             <span class="diamond-text" id="diamond-count">10000+</span>
         </div>
 
-        <div class="btn-iniciar-overlay" onclick="presionarIniciar(event)"></div>
+        <div class="btn-iniciar-overlay" onclick="presionarIniciar()"></div>
     </div>
 
     <audio id="musica-lobby" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
@@ -109,35 +128,100 @@
         let cantidad = 10000;
         let musicaSonando = false;
 
-        function iniciarMusica() {
+        // Función para reproducir música (se activa con el primer clic en CUALQUIER lado)
+        document.body.addEventListener('click', () => {
             const musica = document.getElementById('musica-lobby');
             if (!musicaSonando) {
-                musica.volume = 0.5;
-                musica.play().catch(e => console.log("Interacción requerida"));
+                musica.volume = 0.4;
+                musica.play().catch(e => console.log("Audio en espera"));
                 musicaSonando = true;
+            }
+        });
+
+        // Esta función corre de inmediato al dar clic en los diamantes
+        function sumarDiamantes() {
+            cantidad += 1000;
+            document.getElementById('diamond-count').innerText = cantidad + '+';
+            
+            // Intenta reproducir el sonido de clic
+            const clickSound = document.getElementById('sonido-clic');
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => {});
+        }
+
+        // Simulación animada de inicio de partida
+        function presionarIniciar() {
+            const clickSound = document.getElementById('sonido-clic');
+            clickSound.currentTime = 0;
+            clickSound.play().catch(e => {});
+            
+            const lobbyImg = document.getElementById('lobby-img');
+            
+            // Si ya está buscando, lo cancela
+            if(lobbyImg.classList.contains('searching-match')) {
+                lobbyImg.classList.remove('searching-match');
+            } else {
+                lobbyImg.classList.add('searching-match');
+                // Alerta nativa simulando el juego
+                setTimeout(() => {
+                    alert("¡PARTIDA ENCONTRADA!\nEntrando al servidor de juego...");
+                    lobbyImg.classList.remove('searching-match');
+                }, 4000);
             }
         }
 
-        function sumarDiamantes(event) {
-            event.stopPropagation();
-            cantidad += 1000;
-            document.getElementById('diamond-count').innerText = cantidad + '+';
-            document.getElementById('sonido-clic').play();
+        // CÓDIGO JAVASCRIPT PARA ANIMAR LAS PARTÍCULAS DEL LOBBY
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particlesArray = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.size = Math.random() * 3 + 1;
+                this.speedY = Math.random() * 1 + 0.5;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.y -= this.speedY;
+                if (this.y < 0) {
+                    this.y = canvas.height + Math.random() * 100;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(255, 215, 0, ${this.alpha})`; // Color oro/amarillo Free Fire
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
-        function presionarIniciar(event) {
-            event.stopPropagation();
-            document.getElementById('sonido-clic').play();
-            
-            const lobbyImg = document.getElementById('lobby-img');
-            lobbyImg.classList.add('searching-match');
-            
-            alert("¡Emparejando... Buscando partida en Lobo Solitario!");
-            
-            setTimeout(() => {
-                lobbyImg.classList.remove('searching-match');
-            }, 6000);
+        function initParticles() {
+            for (let i = 0; i < 40; i++) {
+                particlesArray.push(new Particle());
+            }
         }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
     </script>
 
 </body>
