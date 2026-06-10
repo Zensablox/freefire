@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Fire Lobby</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .lobby-container {
+            position: relative;
+            width: 100vw;
+            height: 56.25vw; 
+            max-height: 100vh;
+            max-width: 177.78vh;
+            margin: auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .lobby-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* Modificación del contador de Diamantes */
+        .diamond-overlay {
+            position: absolute;
+            top: 2.1%; 
+            left: 31.5%;
+            width: 4.8%;
+            height: 4.5%;
+            background-color: #171d25; 
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 2px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .diamond-text {
+            color: #ffffff;
+            font-size: 1.1vw; 
+            font-weight: bold;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+            letter-spacing: 0.5px;
+        }
+
+        /* Zona Invisible sobre el Botón INICIAR */
+        .btn-iniciar-overlay {
+            position: absolute;
+            bottom: 2%;
+            right: 4.1%;
+            width: 13.5%;
+            height: 10.5%;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        /* Animación cuando busca partida (parpadeo) */
+        .searching-match {
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        @media (min-aspect-ratio: 16/9) {
+            .diamond-text { font-size: 1.95vh; }
+        }
+    </style>
+</head>
+<body onclick="iniciarMusica()">
+
+    <div class="lobby-container">
+        <img src="image.jpeg" alt="Lobby" class="lobby-bg" id="lobby-img">
+        
+        <div class="diamond-overlay" onclick="sumarDiamantes(event)">
+            <span class="diamond-text" id="diamond-count">10000+</span>
+        </div>
+
+        <div class="btn-iniciar-overlay" onclick="presionarIniciar(event)"></div>
+    </div>
+
+    <audio id="musica-lobby" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+    <audio id="sonido-clic" src="https://actions.google.com/sounds/v1/ui/click.ogg"></audio>
+
+    <script>
+        let cantidad = 10000;
+        let musicaSonando = false;
+
+        function iniciarMusica() {
+            const musica = document.getElementById('musica-lobby');
+            if (!musicaSonando) {
+                musica.volume = 0.5;
+                musica.play().catch(e => console.log("Interacción requerida"));
+                musicaSonando = true;
+            }
+        }
+
+        function sumarDiamantes(event) {
+            event.stopPropagation();
+            cantidad += 1000;
+            document.getElementById('diamond-count').innerText = cantidad + '+';
+            document.getElementById('sonido-clic').play();
+        }
+
+        function presionarIniciar(event) {
+            event.stopPropagation();
+            document.getElementById('sonido-clic').play();
+            
+            const lobbyImg = document.getElementById('lobby-img');
+            lobbyImg.classList.add('searching-match');
+            
+            alert("¡Emparejando... Buscando partida en Lobo Solitario!");
+            
+            setTimeout(() => {
+                lobbyImg.classList.remove('searching-match');
+            }, 6000);
+        }
+    </script>
+
+</body>
+</html>
